@@ -1,12 +1,13 @@
 package dkt.dispatch
 
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.SpringBootTest
 
+@SpringBootTest
 class DispatchKtApplicationTests {
 
-    @Disabled("Test shell: enable once Kafka and Postgres test infrastructure are wired for integration tests")
-    @Test
-    fun `starts the application against test infrastructure`() {
-    }
+//    @Test
+//    fun `starts the application against test infrastructure`() {
+//        // orders.created JSON arrives -> consumer runs -> service plans dispatch -> one row
+//        //  exists in dispatch_jobs
+//    }
 }

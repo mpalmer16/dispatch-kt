@@ -4,13 +4,15 @@ import dkt.dispatch.events.OrderCreatedEvent
 import dkt.dispatch.persistence.DispatchJob
 import dkt.dispatch.persistence.DispatchJobRepository
 import dkt.dispatch.support.orderCreatedEvent
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.*
+import java.time.OffsetDateTime
 import java.util.*
 
 class DispatchPlanningServiceTest {
@@ -27,28 +29,44 @@ class DispatchPlanningServiceTest {
     @Nested
     inner class NewEvents {
 
-        @Disabled("Test shell: add assertions for the saved dispatch job")
         @Test
         fun `creates a pending HIGH priority job for large northern orders`() {
             val event = orderCreatedEvent(customerId = "A-100", totalCents = 10_000)
+            val before = OffsetDateTime.now()
 
-            planDispatchForNewEvent(event)
+            val savedJob = planDispatchForNewEvent(event)
+
+            val after = OffsetDateTime.now()
+
+            assertThat(savedJob.id).isNull()
+            assertThat(savedJob.orderId).isEqualTo(UUID.fromString(event.payload.orderId))
+            assertThat(savedJob.customerId).isEqualTo(event.payload.customerId)
+            assertThat(savedJob.status).isEqualTo("pending_assignment")
+            assertThat(savedJob.region).isEqualTo("NORTH")
+            assertThat(savedJob.sourceEventId).isEqualTo(UUID.fromString(event.eventId))
+            assertThat(savedJob.createdAt).isBetween(before, after)
         }
 
-        @Disabled("Test shell: add assertions for the saved dispatch job")
         @Test
         fun `creates a NORMAL priority job for smaller central orders`() {
             val event = orderCreatedEvent(customerId = "H-200", totalCents = 9_999)
 
-            planDispatchForNewEvent(event)
+            val savedJob = planDispatchForNewEvent(event)
+
+            assertThat(savedJob.status).isEqualTo("pending_assignment")
+            assertThat(savedJob.priority).isEqualTo("NORMAL")
+            assertThat(savedJob.region).isEqualTo("CENTRAL")
+            assertThat(savedJob.sourceEventId).isEqualTo(UUID.fromString(event.eventId))
         }
 
-        @Disabled("Test shell: add assertions for regional mapping")
         @Test
         fun `routes customers outside the north and central ranges to SOUTH`() {
             val event = orderCreatedEvent(customerId = "Z-300")
 
-            planDispatchForNewEvent(event)
+            val savedJob = planDispatchForNewEvent(event)
+
+            assertThat(savedJob.region).isEqualTo("SOUTH")
+            assertThat(savedJob.priority).isEqualTo("HIGH")
         }
     }
 
@@ -71,20 +89,20 @@ class DispatchPlanningServiceTest {
     @Nested
     inner class InvalidIdentifiers {
 
-        @Disabled("Test shell: add failure assertions for malformed ids")
         @Test
         fun `fails fast when the event id is not a UUID`() {
             val event = orderCreatedEvent(eventId = "not-a-uuid")
 
-            subject.planDispatch(event)
+            assertThrows<IllegalArgumentException> { subject.planDispatch(event) }
+
+            verify(dispatchJobRepository, never()).save(any(DispatchJob::class.java))
         }
 
-        @Disabled("Test shell: add failure assertions for malformed ids")
         @Test
         fun `fails fast when the payload order id is not a UUID`() {
             val event = orderCreatedEvent(orderId = "not-a-uuid")
 
-            subject.planDispatch(event)
+            assertThrows<IllegalArgumentException> { subject.planDispatch(event) }
         }
     }
 
