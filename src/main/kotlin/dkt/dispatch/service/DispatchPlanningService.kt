@@ -15,10 +15,11 @@ class DispatchPlanningService(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     fun planDispatch(event: OrderCreatedEvent) {
+        val eventId = UUID.fromString(event.eventId)
         val orderId = UUID.fromString(event.payload.orderId)
 
-        if (dispatchJobRepository.existsByOrderId(orderId)) {
-            logger.info("Dispatch job already exists for orderId={}, skipping.", orderId)
+        if (dispatchJobRepository.existsBySourceEventId(eventId)) {
+            logger.info("Event already processed, skipping.")
             return
         }
 
@@ -34,13 +35,7 @@ class DispatchPlanningService(
             sourceEventId = UUID.fromString(event.eventId),
             createdAt = OffsetDateTime.now(),
         )
-        try {
-            val saved = dispatchJobRepository.save(job)
-            logger.info("SAVED DISPATCH JOB: {}", saved)
-        } catch (e: Exception) {
-            logger.error("Failed to save dispatch job", e)
-            throw e
-        }
+        dispatchJobRepository.save(job)
 
         logger.info(
             "Planned Dispatch for oderId={}, region={}, priority={}",
