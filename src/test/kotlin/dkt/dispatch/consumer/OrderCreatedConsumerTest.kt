@@ -3,7 +3,6 @@ package dkt.dispatch.consumer
 import dkt.dispatch.service.DispatchPlanningService
 import dkt.dispatch.support.orderCreatedEvent
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
 
@@ -18,11 +17,12 @@ class OrderCreatedConsumerTest {
         subject = OrderCreatedConsumer(dispatchPlanningService)
     }
 
-    @Disabled("Test shell: add interaction assertions for consumer behavior")
     @Test
     fun `forwards each consumed event to dispatch planning`() {
         val event = orderCreatedEvent()
 
         subject.consume(event)
+
+        Mockito.verify(dispatchPlanningService).planDispatch(event)
     }
 }

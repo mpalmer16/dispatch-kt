@@ -9,8 +9,9 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
-import org.mockito.Mockito
-import java.util.UUID
+import org.mockito.ArgumentMatchers.any
+import org.mockito.Mockito.*
+import java.util.*
 
 class DispatchPlanningServiceTest {
 
@@ -19,7 +20,7 @@ class DispatchPlanningServiceTest {
 
     @BeforeEach
     fun setUp() {
-        dispatchJobRepository = Mockito.mock(DispatchJobRepository::class.java)
+        dispatchJobRepository = mock(DispatchJobRepository::class.java)
         subject = DispatchPlanningService(dispatchJobRepository)
     }
 
@@ -54,13 +55,16 @@ class DispatchPlanningServiceTest {
     @Nested
     inner class DuplicateEvents {
 
-        @Disabled("Test shell: add duplicate-handling assertions")
         @Test
         fun `does not save a second dispatch job for an already processed event`() {
             val event = orderCreatedEvent()
             givenEventAlreadyProcessed(event)
 
             subject.planDispatch(event)
+
+            verify(dispatchJobRepository).existsBySourceEventId(UUID.fromString(event.eventId))
+            verify(dispatchJobRepository, never()).save(any(DispatchJob::class.java))
+            verifyNoMoreInteractions(dispatchJobRepository)
         }
     }
 
@@ -93,21 +97,21 @@ class DispatchPlanningServiceTest {
     }
 
     private fun givenEventHasNotBeenProcessed(event: OrderCreatedEvent) {
-        Mockito.`when`(dispatchJobRepository.existsBySourceEventId(UUID.fromString(event.eventId)))
+        `when`(dispatchJobRepository.existsBySourceEventId(UUID.fromString(event.eventId)))
             .thenReturn(false)
-        Mockito.doAnswer { invocation -> invocation.getArgument<DispatchJob>(0) }
+        doAnswer { invocation -> invocation.getArgument<DispatchJob>(0) }
             .`when`(dispatchJobRepository)
-            .save(Mockito.any(DispatchJob::class.java))
+            .save(any(DispatchJob::class.java))
     }
 
     private fun givenEventAlreadyProcessed(event: OrderCreatedEvent) {
-        Mockito.`when`(dispatchJobRepository.existsBySourceEventId(UUID.fromString(event.eventId)))
+        `when`(dispatchJobRepository.existsBySourceEventId(UUID.fromString(event.eventId)))
             .thenReturn(true)
     }
 
     private fun captureSavedJob(): DispatchJob {
         val captor = ArgumentCaptor.forClass(DispatchJob::class.java)
-        Mockito.verify(dispatchJobRepository).save(captor.capture())
+        verify(dispatchJobRepository).save(captor.capture())
         return captor.value
     }
 }
