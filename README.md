@@ -44,7 +44,7 @@ parent-directory/
 
 Make sure you have the following installed:
 
-* Java 17+
+* Java 21+
 * Gradle (or use the included `./gradlew`)
 * Docker
 * Docker Compose
@@ -90,7 +90,7 @@ docker exec -it <kafka-container> kafka-topics \
   --bootstrap-server localhost:9092 \
   --create \
   --if-not-exists \
-  --topic dispatch-jobs
+  --topic orders.created
 ```
 
 ---
@@ -108,6 +108,8 @@ Or if using Spring Boot:
 ```bash
 ./gradlew bootRun
 ```
+
+Keep `dispatch-kt` running before using the parent repo's `./verify-flow.sh` script.
 
 ---
 
@@ -189,4 +191,3 @@ This project is intentionally designed to simulate real-world backend developmen
 * service-to-service communication
 
 It is not a toy example — the goal is to practice building something that feels like production software.
-

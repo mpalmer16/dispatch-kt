@@ -10,9 +10,8 @@ version = "0.0.1-SNAPSHOT"
 description = "dispatch-kt"
 
 java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
 
 repositories {
@@ -36,8 +35,13 @@ dependencies {
 
 kotlin {
     compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
     }
+}
+
+tasks.withType<JavaCompile> {
+    options.release = 21
 }
 
 tasks.withType<Test> {
