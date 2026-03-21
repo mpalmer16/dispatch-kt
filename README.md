@@ -72,7 +72,7 @@ Then run the service from this repo:
 
 This service is typically run alongside:
 
-- `dispatch`, which writes the order and outbox row
+- `dispatch-rs`, which writes the order and outbox row
 - `dispatch-go`, which relays the outbox event to Kafka
 
 ## Tests
